@@ -1,0 +1,133 @@
+
+# L12 - 03.12.19
+
+# Internet Processes
+
+How do processes running on the same system talk to each other? How to processes on different systems talk to each other? 
+
+## Pipes
+
+We discussed pipes when we discussed I/O. Interprocess communication can be achieved using pipes. They allow **one-way data flow** and can connect processes with a common ancestor. The stdout can be connected to the stdin of another process. 
+
+```c
+// The output of program1 is input for program 2
+./program1 | ./program2
+```
+Data flows left to right. 
+
+**Redirection vs. Pipes** Different from redirection, which passes input/output from/to a file or stream. Whereas a pipe passes output between running processes. 
+
+## Named Pipe (aka FIFO)
+
+A **named pipe** or **FIFO** is a type of file used for interprocess communication. We can refer to FIFOs (first in first out) by name after they are created using mkfifo command.
+
+```c
+mkfifo
+```
+> Produces a file. We send output to FIFOs using the > and < characters, rather than the pipe character
+> 
+
+## Intro to TCP 
+
+
+Two distinct, disjoint processes communciate with each other via a network connection, which is a TCP connection. 
+> With TCP connection, you can connect a program on one machine (say, CLAC) with a program on another machine (say, CUNIX)
+> It connects two different processes running on two different computers anywhere on the internet
+
+Five TCP layers (to be covered in next lecture)
+> TCP - layer 4 - by the time you get to this layer, you have a pipeline just like the one above, where programs are sending bytes from one to the other. And then once you have that, from there you build browser communication, email communication, ssh, etc.
+
+## netcat
+
+```c
+nc 
+```
+> netcat is a tool to send and receive arbitrary bytes through the network
+> 
+
+Demo: communicate between servers.
+
+To make a connection between two computers, run one side as a server and one side as a client. The server's job is to listen for incoming connection. The server must be assigned a port number, like a radio station to which clients can listen. 
+
+
+```c
+// On CLAC 
+// Server mode
+nc -l 10000 // Port 10,000
+```
+Any computer on the internet can connect to that program if it knows where to go (clac.cs.columbia.edu) and it knows which port this server program is listenning on (10,000).
+
+```c
+// On CUNIX (in a different terminal window)
+// Client mode
+nc clac.cs.columbia.edu 10000
+```
+Now they are connected. This is a TCP connection. There is a virtual pipeline to send infromation from one process to another, running on different machines. Now we have a **two-way connection**.
+>So this is similar to the pipeline demo, but this is a two-way (not one-way) connection between different machines.
+>
+
+**nc only allows one connection**
+
+netcat directs your stdin into the network, and your stdout connects to incoming TCP connection.
+>This means it will read whatever comes from stdin of CLAC and feed it into the network, as in to CUNIX, and it will become the stdout of the CUNIX terminal (it will appear on CUNIX terminal screen) 
+>
+> It will print to stdout anything that is incoming from the network. So anything typed in on the CUNIX side will appear on the CLAC side.  
+> 
+> It can go in either directon.
+>  
+> This is a circa 1980 chat program.
+> 
+
+We can use this to copy files from one server to the other 
+> Instead of nc -l 10000 you redirect stdout to a file        
+```c
+mkfifo mypipe // This creates a file mypipe.
+// It is a special file that acts like a 
+//  pipe connecting two programs
+```
+
+Turn mdb-lookup program into a network server: 
+
+```c
+cat mypipe | ./mdb-lookup-cs3157 | nc -l 10000 | > mypipe
+// whatever mdb-lookup prints goes into stdin of netcat, which then goes to stdout of TCP connection 
+```
+Type search string in CUNIX, put back into mdb-lookup 
+
+
+special p says it's a special file - acts just like that vertical pipe between origrams but has a file name that you can fopen and read and write 
+
+whatever you type on cunix, fed into port, to pipe to mdb lookup program, then spit out result in cat fed back into netcat piuts it through the network 
+
+
+
+
+> -
+>
+> -
+>
+> -
+>
+> -
+>
+> -
+>
+> -
+>
+> -
+>
+> -
+>
+> -
+
+
+## IN CLASS 03/12 part 2 
+
+C language - I/O
+Fork - UNIX specific, beyond c standard library 
+
+Further - network - how do you make a C program communicate over the internet with another program?
+
+```c
+echo "" | ./mdb-lookup-cs3157 | grep AP
+```
